@@ -28,6 +28,7 @@ const int dataLogIntervalFast_ms = 10;
 const bool logData = true; // Should always be true unless system is being tested
 int dataLogInterval_ms = 100;
 int dataLogRate_hz;
+float loopTimeGlobal;
 
 
 //LoadCell
@@ -54,6 +55,7 @@ const int stateIndicatorLED_BLU = 2;
 const int ignitionPyroPin = 4;
 const int indicatorBuzzer = 6;
 const bool allowBuzzer = false;
+float loopTime, aveLoopTime, timeOfLastLoop;
 
 //Time
 unsigned long cellTime, sdTime, statusIndTime, statusIndTimeLocked, systemOnTime_s = 0;
@@ -93,10 +95,7 @@ void loop() {
 
     GetLoadCellData();
     ManageStandby();
-    
-    if (testLoadcell) {
-      Serial.println(currentCellData);
-    }
+  
     // Serial.print(" - ");
     // Serial.println(MovingLoadAve(currentCellData));
   }
@@ -298,7 +297,7 @@ void InitializeSD() { //Initializes the SD card reader
   dataFile = SD.open("data.csv", FILE_READ);
   String fileString = dataFile.readString();
 
-  String headerString = "System_State, System_On_Time_s, Test_Time_s, Load_Cell_Data_g, Load_Cell_Data_Ave_g, Calibration_State, Data_Log_Interval_ms, Data_Log_Rate_Hz";
+  String headerString = "System_State, System_On_Time_s, Test_Time_s, Load_Cell_Data_g, Load_Cell_Data_Ave_g, Calibration_State, Data_Log_Interval_ms, Data_Log_Rate_Hz, Loop_Run_Time_ms";
 
 	if (fileString[0] != 'S') { // Checks whether headers have been declared already or not
     dataFile.close();
@@ -393,15 +392,17 @@ void WriteDataToSD() {
 
   dataLogRate_hz = 1000 / dataLogInterval_ms;
 
+  CalcLoopTime();
+
   // dataFile = SD.open("data.csv", FILE_WRITE);
 
   if (millis() > sdTime + dataLogInterval_ms && dataFile) {
-    dataFile.println(String(systemState) + ", " + String(systemOnTime_s) + ", " + String(testTime_s) + ", "+ String(currentCellData) + ", " + String(globalLoadMovingAve) + ", " + String(cellCalibrationState) + ", " + String(dataLogInterval_ms) + ", " + String(dataLogRate_hz)); 
+    dataFile.println(String(systemState) + ", " + String(systemOnTime_s) + ", " + String(testTime_s) + ", "+ String(currentCellData) + ", " + String(globalLoadMovingAve) + ", " + String(cellCalibrationState) + ", " + String(dataLogInterval_ms) + ", " + String(dataLogRate_hz)) + String(loopTimeGlobal); 
     sdTime = millis(); 
   }
 
   if (!dataFile) Serial.println("Error writing to file.");
-  // dataFile.close();
+  // dataFile.close(); // #TESTING
 }
 
 //==SYSTEM==
@@ -416,6 +417,10 @@ void ManageStandby() {
     AdvanceState(); 
     countdownEndTime_ms = millis() + (countdownLength_s * 1000);
   }
+
+  if (testLoadcell) {
+      Serial.println(currentCellData);
+    }
 }
 
 void ManageCountdown() {
@@ -492,6 +497,12 @@ float MovingLoadAve(float value) {
 
   globalLoadMovingAve = sum/cvalues;
   return sum/cvalues;
+}
+
+void CalcLoopTime() { // Calculates Time of one Loop/Cycle
+  loopTime = millis() - timeOfLastLoop;
+  timeOfLastLoop = millis();
+  loopTimeGlobal = loopTime;
 }
 
 //==TIME==
