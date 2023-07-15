@@ -1,4 +1,3 @@
-#include <MPU6050.h>
 #include <HX711_ADC.h>
 #include <SPI.h>
 #include <SD.h>
@@ -297,7 +296,7 @@ void InitializeSD() { //Initializes the SD card reader
   dataFile = SD.open("data.csv", FILE_READ);
   String fileString = dataFile.readString();
 
-  String headerString = "System_State, System_On_Time_s, Test_Time_s, Load_Cell_Data_g, Load_Cell_Data_Ave_g, Calibration_State, Data_Log_Interval_ms, Data_Log_Rate_Hz, Loop_Run_Time_ms";
+  String headerString = "System_State, System_On_Time_s, Test_Time_s, Load_Cell_Data_g, Load_Cell_Data_Ave_g, Calibration_State, Data_Log_Interval_ms, Data_Log_Rate_Hz, Loop_Run_Time_micros";
 
 	if (fileString[0] != 'S') { // Checks whether headers have been declared already or not
     dataFile.close();
@@ -397,7 +396,7 @@ void WriteDataToSD() {
   // dataFile = SD.open("data.csv", FILE_WRITE);
 
   if (millis() > sdTime + dataLogInterval_ms && dataFile) {
-    dataFile.println(String(systemState) + ", " + String(systemOnTime_s) + ", " + String(testTime_s) + ", "+ String(currentCellData) + ", " + String(globalLoadMovingAve) + ", " + String(cellCalibrationState) + ", " + String(dataLogInterval_ms) + ", " + String(dataLogRate_hz)) + String(loopTimeGlobal); 
+    dataFile.println(String(systemState) + ", " + String(systemOnTime_s) + ", " + String(testTime_s) + ", "+ String(currentCellData) + ", " + String(globalLoadMovingAve) + ", " + String(cellCalibrationState) + ", " + String(dataLogInterval_ms) + ", " + String(dataLogRate_hz) + ", " + String(loopTimeGlobal)); 
     sdTime = millis(); 
   }
 
@@ -447,29 +446,6 @@ void ManageBurn() {
   }
 }
 
-void IndicateStartup() {
-  if (allowBuzzer) {
-    tone(indicatorBuzzer, 750, 500);
-    delay(500);
-    tone(indicatorBuzzer, 1250, 50);
-    delay(100);
-    tone(indicatorBuzzer, 1250, 50);
-    delay(100);
-    tone(indicatorBuzzer, 1250, 50);
-    delay(100);
-  }
-  
-  digitalWrite(stateIndicatorLED_GRN, HIGH);
-  delay(200);
-  digitalWrite(stateIndicatorLED_GRN, LOW);
-  digitalWrite(stateIndicatorLED_RED, HIGH);
-  delay(200);
-  digitalWrite(stateIndicatorLED_RED, LOW);
-  digitalWrite(stateIndicatorLED_BLU, HIGH);
-  delay(200);
-  digitalWrite(stateIndicatorLED_BLU, LOW);
-}
-
 void FireIgnitionPyro() {
   digitalWrite(ignitionPyroPin, HIGH);
 }
@@ -500,8 +476,8 @@ float MovingLoadAve(float value) {
 }
 
 void CalcLoopTime() { // Calculates Time of one Loop/Cycle
-  loopTime = millis() - timeOfLastLoop;
-  timeOfLastLoop = millis();
+  loopTime = micros() - timeOfLastLoop;
+  timeOfLastLoop = micros();
   loopTimeGlobal = loopTime;
 }
 
@@ -515,6 +491,29 @@ void TimeKeeper() {
 }
 
 //==STATE INDICATION==
+
+void IndicateStartup() {
+  if (allowBuzzer) {
+    tone(indicatorBuzzer, 750, 500);
+    delay(500);
+    tone(indicatorBuzzer, 1250, 50);
+    delay(100);
+    tone(indicatorBuzzer, 1250, 50);
+    delay(100);
+    tone(indicatorBuzzer, 1250, 50);
+    delay(100);
+  }
+  
+  digitalWrite(stateIndicatorLED_GRN, HIGH);
+  delay(200);
+  digitalWrite(stateIndicatorLED_GRN, LOW);
+  digitalWrite(stateIndicatorLED_RED, HIGH);
+  delay(200);
+  digitalWrite(stateIndicatorLED_RED, LOW);
+  digitalWrite(stateIndicatorLED_BLU, HIGH);
+  delay(200);
+  digitalWrite(stateIndicatorLED_BLU, LOW);
+}
 
 void IndicateStandby() {
 
