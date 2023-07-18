@@ -143,7 +143,7 @@ void WatchCommands() {
   if (Serial.available() > 0) {
     char inByte = Serial.read();
     if (inByte == 'S') sysArmed = true;
-    if (inByte == 'A') ABORT = true;
+    if (inByte == 'A') systemState = 42;
     if (inByte == 'T') testLoadcell = !testLoadcell;// Displays loadcell values in Serial Monitor
   }
 }
