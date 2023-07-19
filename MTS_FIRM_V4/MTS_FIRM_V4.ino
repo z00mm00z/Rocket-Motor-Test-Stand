@@ -12,7 +12,7 @@ Explanations For Stuff That Might Not Make Sense:
 
 /*
 TODO:
-- Test opening dataFile in beginning of test and closing at end
+- Test opening dataFile in beginning of test and closing at end [ CLEAN UP ]
 - Write new calibration value to config file [ DONE ]
 - Fix burn end detection [ DONE ]
 - Revise and add comments
