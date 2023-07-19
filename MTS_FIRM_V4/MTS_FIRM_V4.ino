@@ -94,9 +94,6 @@ void loop() {
 
     GetLoadCellData();
     ManageStandby();
-  
-    // Serial.print(" - ");
-    // Serial.println(MovingLoadAve(currentCellData));
   }
   else if (systemState == 1) { //Countdown 
     TimeKeeper();
@@ -168,7 +165,7 @@ void  InitializeCell() {
   if (LoadCell.getTareTimeoutFlag() || LoadCell.getSignalTimeoutFlag()) {
     Serial.println("Timeout, check MCU>HX711 wiring and pin designations");
     digitalWrite(stateIndicatorLED_RED, HIGH);
-    tone(indicatorBuzzer, 100, 200);
+    if (allowBuzzer) { tone(indicatorBuzzer, 100, 200); }
     while (1);
   }
   else {
@@ -177,7 +174,7 @@ void  InitializeCell() {
 
   LoadCell.refreshDataSet(); //refresh the dataset to be sure that the known mass is measured correct | THIS TAKES TIME, DELAYS PROGRAM
 
-  tone(indicatorBuzzer, 1500);
+  if (allowBuzzer) { tone(indicatorBuzzer, 1500); }
   delay(50);
   noTone(indicatorBuzzer);
   Serial.println("done.");
@@ -289,7 +286,7 @@ void InitializeSD() { //Initializes the SD card reader
   if (!SD.begin(sdChipSelect)) {
     Serial.println("initialization failed!");
     digitalWrite(stateIndicatorLED_RED, HIGH);
-    tone(indicatorBuzzer, 100, 200);
+    if (allowBuzzer) { tone(indicatorBuzzer, 100, 200); }
     while (1);
   }
 
@@ -307,7 +304,7 @@ void InitializeSD() { //Initializes the SD card reader
   }
 
   //dataFile.close();
-  tone(indicatorBuzzer, 1500);
+  if (allowBuzzer) { tone(indicatorBuzzer, 1500); }
   delay(50);
   noTone(indicatorBuzzer);
   Serial.println("done.");
