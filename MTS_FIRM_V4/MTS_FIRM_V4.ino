@@ -22,9 +22,9 @@ TODO:
 File dataFile;
 File configFile;
 const int sdChipSelect = 8;
-const int dataLogIntervalDefault_ms = 100; //Constants for data log period.
-const int dataLogIntervalFast_ms = 10;
 const bool logData = true; // Should always be true unless system is being tested
+int dataLogIntervalSlow_ms = 100; //Constants for data log period.
+int dataLogIntervalFast_ms = 10;
 int dataLogInterval_ms = 100;
 int dataLogRate_hz;
 float loopTimeGlobal;
@@ -279,7 +279,7 @@ void InitializeSD() { //Initializes the SD card reader
 
   if (!logData) Serial.println("\n DATA LOGGING DISABLED \n");
 
-  dataLogInterval_ms = dataLogIntervalDefault_ms;
+  dataLogInterval_ms = dataLogIntervalSlow_ms;
 
   Serial.print("Initializing SD card...");
   delay(100);
@@ -360,6 +360,10 @@ void ProcessVariableLine(String line) { //Extracts variable value from line
     calibrationValueFromConfig = varValStr.toFloat();
   } else if (varName == "MLT") {
     motorLoadThreshold = varValStr.toFloat();
+  } else if (varName == "DLF") {
+    dataLogIntervalFast_ms = varValStr.toInt();
+  } else if (varName == "DLS") {
+    dataLogIntervalSlow_ms = varValStr.toInt();
   } else {
     Serial.println();
     Serial.println("! The '" + varName + "' variable saved in config was not accounted for in code. !");
@@ -421,7 +425,7 @@ void ManageStandby() {
 
 void ManageCountdown() {
 
-  dataLogInterval_ms = dataLogIntervalDefault_ms;
+  dataLogInterval_ms = dataLogIntervalSlow_ms;
 
   if(testTime_s >= 0) {
     AdvanceState();
