@@ -1,6 +1,6 @@
 # Introduction: 
 I built this as a pilot project to get some experience before I attempt to build a hopefully more complex rocket in the future and I learnt quite a bit about soldering and assembling a full system like this. This repo should
-serve as a resource for people looking to build a motor test stand similar to this, as I found that this topic wasn't covered much anywhere.
+serve as a resource for people looking to build a motor test stand similar to this, as I found that this topic wasn't covered much anywhere in detail.
 
 # How it works:
 The system does 3 main things: 
