@@ -22,7 +22,7 @@ TODO:
 File dataFile;
 File configFile;
 const int sdChipSelect = 8;
-const bool logData = true; // Should always be true unless system is being tested
+bool logData = true; // Should always be true unless system is being tested
 int dataLogIntervalSlow_ms = 100; //Constants for data log period.
 int dataLogIntervalFast_ms = 10;
 int dataLogInterval_ms = 100;
@@ -390,11 +390,11 @@ void SaveLoadCellCalibrationValueToConfig(float calValue) {
 
 void WriteDataToSD() {
 
+  //DataFile is opened in initializeSD and closed in ManageBurn.
+
   dataLogRate_hz = 1000 / dataLogInterval_ms;
 
   CalcLoopTime();
-
-  // dataFile = SD.open("data.csv", FILE_WRITE);
 
   if (millis() > sdTime + dataLogInterval_ms && dataFile) {
     dataFile.println(String(systemState) + ", " + String(systemOnTime_s) + ", " + String(testTime_s) + ", "+ String(currentCellData) + ", " + String(globalLoadMovingAve) + ", " + String(cellCalibrationState) + ", " + String(dataLogInterval_ms) + ", " + String(dataLogRate_hz) + ", " + String(loopTimeGlobal)); 
@@ -402,7 +402,11 @@ void WriteDataToSD() {
   }
 
   if (!dataFile) Serial.println("Error writing to file.");
-  // dataFile.close(); // #TESTING
+}
+
+void EndDataWrite() {
+  datFile.close();
+  logData = false;
 }
 
 //==SYSTEM==
@@ -443,7 +447,7 @@ void ManageBurn() {
   digitalWrite(ignitionPyroPin, LOW);
   if (currentCellData < motorLoadThreshold) {
     AdvanceState();
-    dataFile.close(); // #TESTING
+    EndDataWrite();
   }
 }
 
