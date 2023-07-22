@@ -12,10 +12,12 @@ Explanations For Stuff That Might Not Make Sense:
 
 /*
 TODO:
-- Test opening dataFile in beginning of test and closing at end [ CLEAN UP ]
+- Test opening dataFile in beginning of test and closing at end [ DONE ]
 - Write new calibration value to config file [ DONE ]
 - Fix burn end detection [ DONE ]
 - Revise and add comments
+- After calibration, system skips countdown on start occasionly [ POSSIBLY FIXED BUT NOT TESTED FULLY ]
+- Have a look at celldataread function to see if it reads data at fastest rate possible [ DONE ]
 */
 
 //SD
@@ -40,6 +42,7 @@ float globalLoadMovingAve; //Just for reading
 float calibrationValueFromConfig; //Calibration Value stored in the config file on the SD card
 bool loadCellIsCalibrated = false;
 int cellCalibrationState = 0;
+float low, high; // temporary noise measuring
 HX711_ADC LoadCell(HX711_dout, HX711_sck);
 
 
@@ -94,6 +97,8 @@ void loop() {
 
     GetLoadCellData();
     ManageStandby();
+
+    CalculateCellNoise();
   }
   else if (systemState == 1) { //Countdown 
     TimeKeeper();
@@ -271,6 +276,14 @@ void GetLoadCellData() { //Gets data from loadcell
   }
 }
 
+void CalculateCellNoise() {
+  if (currentCellData > high) {
+    high = currentCellData;
+  } else if (currentCellData < low) {
+    low = currentCellData;
+  }
+}
+
 //==SD==
 
 void InitializeSD() { //Initializes the SD card reader
@@ -341,7 +354,7 @@ void ProcessConfig() { //Processes config file
   configFile.close(); 
 }
 
-void ProcessVariableLine(String line) { //Extracts variable value from line 
+void ProcessVariableLine(String line) { //Extracts variable values from line 
   String varName, varValStr;
   int varVal;
 
@@ -396,7 +409,7 @@ void WriteDataToSD() {
 
   CalcLoopTime();
 
-  if (millis() > sdTime + dataLogInterval_ms && dataFile) {
+  if (millis() > sdTime + dataLogInterval_ms && dataFile && logData) {
     dataFile.println(String(systemState) + ", " + String(systemOnTime_s) + ", " + String(testTime_s) + ", "+ String(currentCellData) + ", " + String(globalLoadMovingAve) + ", " + String(cellCalibrationState) + ", " + String(dataLogInterval_ms) + ", " + String(dataLogRate_hz) + ", " + String(loopTimeGlobal)); 
     sdTime = millis(); 
   }
@@ -405,7 +418,7 @@ void WriteDataToSD() {
 }
 
 void EndDataWrite() {
-  datFile.close();
+  dataFile.close();
   logData = false;
 }
 
@@ -437,7 +450,6 @@ void ManageCountdown() {
 } 
 
 void ManageIgnition() { 
-  //Maybe after certain time period write pin is set to low as safety
   dataLogInterval_ms = dataLogIntervalFast_ms;
 
   if (currentCellData > motorLoadThreshold) AdvanceState(); digitalWrite(ignitionPyroPin, LOW);
@@ -445,7 +457,8 @@ void ManageIgnition() {
 
 void ManageBurn() {
   digitalWrite(ignitionPyroPin, LOW);
-  if (currentCellData < motorLoadThreshold) {
+
+  if (MovingLoadAve(currentCellData) < motorLoadThreshold) {
     AdvanceState();
     EndDataWrite();
   }
@@ -456,7 +469,7 @@ void FireIgnitionPyro() {
 }
 
 float MovingLoadAve(float value) {
-  const int nvalues = 500; // Moving average sample size
+  const int nvalues = 50; // Moving average sample size
 
   static int current = 0; // Moving average window size
   static int cvalues = 0; // Count of values read
@@ -480,7 +493,7 @@ float MovingLoadAve(float value) {
   return sum/cvalues;
 }
 
-void CalcLoopTime() { // Calculates Time of one Loop/Cycle
+void CalcLoopTime() { // Calculates Time of one clock cycle
   loopTime = micros() - timeOfLastLoop;
   timeOfLastLoop = micros();
   loopTimeGlobal = loopTime;
@@ -644,7 +657,7 @@ void IndicateEndBurnStandby() {
 }
 
 void IndicateAbort() {
-    if (millis() > statusIndTime + 100) {
+  if (millis() > statusIndTime + 100) {
 
     if (statusIndTimeLocked >= 3000) {
       statusIndTimeLocked = 0;
@@ -655,7 +668,7 @@ void IndicateAbort() {
     statusIndTime = millis();
   }
 
-  if (statusIndTimeLocked % 100 == 0) {
+  if (statusIndTimeLocked % 100 == 0 && allowBuzzer) {
     tone(indicatorBuzzer, 2000); // #TESTING - make sure tone is loudest and as noticable as possible
   } else { 
     noTone(indicatorBuzzer); 
