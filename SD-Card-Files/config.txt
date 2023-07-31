@@ -1,0 +1,29 @@
+Motor Load Threshold (grams) (How much force motor must produce to be considered "on"):
+*MLT: 10;
+
+Countdown Length (Seconds):
+*CL: 30;
+
+Loadcell Calibration Value (Float):
+*LCV: 0;
+
+Data Safe Length (Seconds):
+*DSL: 5;
+
+Data Log Interval (Milliseconds):
+Fast (Rate During Ignition and Burn)
+*DLF: 10;
+Slow (Rate During Countdown)
+*DLS: 100;
+
+Buzzer On/Off (1/0):
+*BS: 1;
+
+
+
+
+
+
+
+
+
