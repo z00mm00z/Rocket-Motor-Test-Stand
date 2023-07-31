@@ -56,12 +56,12 @@ const int stateIndicatorLED_RED = 5;
 const int stateIndicatorLED_BLU = 2;
 const int ignitionPyroPin = 4;
 const int indicatorBuzzer = 6;
-const bool allowBuzzer = false;
+bool allowBuzzer = true;
 float loopTime, aveLoopTime, timeOfLastLoop;
 
 //Time
-unsigned long cellTime, sdTime, statusIndTime, statusIndTimeLocked, systemOnTime_s = 0;
-float testTime_s, countdownEndTime_ms;
+unsigned long cellTime, sdTime, statusIndTime, statusIndTimeLocked, dataSafeEndTime, systemOnTime_s = 0;
+float testTime_s, countdownEndTime_ms, dataSafeLength_s;
 int countdownLength_s = 30;
 
 void setup() {
@@ -128,7 +128,16 @@ void loop() {
 
     WriteDataToSD();
   } 
-  else if (systemState == 4) { // Motor no longer running
+  else if (systemState == 4) { // Make sure we haven't stopped recording data by accident
+    TimeKeeper();
+    IndicateBurn();
+
+    GetLoadCellData();
+    ManageEndBurnDataSafe();
+
+    WriteDataToSD();
+  }
+  else if (systemState == 5) { // Motor is burnt
     TimeKeeper();
 
     IndicateEndBurnStandby();
@@ -377,6 +386,10 @@ void ProcessVariableLine(String line) { //Extracts variable values from line
     dataLogIntervalFast_ms = varValStr.toInt();
   } else if (varName == "DLS") {
     dataLogIntervalSlow_ms = varValStr.toInt();
+  } else if (varName == "BS") {
+    allowBuzzer = varValStr.toInt();
+  } else if (varName == "DSL") {
+    dataSafeLength_s = varValStr.toFloat();
   } else {
     Serial.println();
     Serial.println("! The '" + varName + "' variable saved in config was not accounted for in code. !");
@@ -414,7 +427,7 @@ void WriteDataToSD() {
     sdTime = millis(); 
   }
 
-  if (!dataFile) Serial.println("Error writing to file.");
+  if (!dataFile && logData) Serial.println("Error writing to file.");
 }
 
 void EndDataWrite() {
@@ -460,6 +473,22 @@ void ManageBurn() {
 
   if (MovingLoadAve(currentCellData) < motorLoadThreshold) {
     AdvanceState();
+    dataSafeEndTime = millis() + (dataSafeLength_s * 1000);
+  }
+}
+
+void ManageEndBurnDataSafe() { // Ensures that we do not lose data if the system mistakenly ends data recording
+  if (currentCellData > motorLoadThreshold) {
+    systemState--;
+  }
+
+  if (dataSafeEndTime <= millis()) {
+    AdvanceState();
+  }
+}
+
+void ManageEndBurnStandby() {
+  if (dataFile) {
     EndDataWrite();
   }
 }
@@ -496,7 +525,7 @@ float MovingLoadAve(float value) {
 void CalcLoopTime() { // Calculates Time of one clock cycle
   loopTime = micros() - timeOfLastLoop;
   timeOfLastLoop = micros();
-  loopTimeGlobal = loopTime;
+  if (loopTime < 60000) { loopTimeGlobal = loopTime; }
 }
 
 //==TIME==
