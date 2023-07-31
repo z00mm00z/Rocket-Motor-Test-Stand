@@ -3,21 +3,9 @@
 #include <SD.h>
 
 /*
-Explanations For Stuff That Might Not Make Sense:
+This program is licenced under the Creative Commons Zero V1.0 Universal Licence
 
-- StatusIndTime and StatusIndTimeLocked:
-  StatusIndTime is used by the status indication system to keep track of time. It resets or "updates" every 100ms. At each update, 100ms is added to StatusIndTimeLocked which can have a variable loop time after which it resets to 0, mainly 3 seconds (3000ms) in this case. 
-
-*/
-
-/*
-TODO:
-- Test opening dataFile in beginning of test and closing at end [ DONE ]
-- Write new calibration value to config file [ DONE ]
-- Fix burn end detection [ DONE ]
-- Revise and add comments
-- After calibration, system skips countdown on start occasionly [ POSSIBLY FIXED BUT NOT TESTED FULLY ]
-- Have a look at celldataread function to see if it reads data at fastest rate possible [ DONE ]
+- Settings Are Changed In The Config File And Are Automatticaly Applied
 */
 
 //SD
@@ -33,7 +21,7 @@ float loopTimeGlobal;
 
 
 //LoadCell
-float motorLoadThreshold = 1; // The amount of thrust that must be produced before the computer changes states
+float motorLoadThreshold = 10;
 const int HX711_dout = 9; // HX711 dout pin
 const int HX711_sck = 10; // HX711 sck pin
 const int loadSampleRate = 50; 
