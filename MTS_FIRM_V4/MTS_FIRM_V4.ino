@@ -16,8 +16,6 @@ bool logData = true; // Should always be true unless system is being tested
 int dataLogIntervalSlow_ms = 100; //Constants for data log period.
 int dataLogIntervalFast_ms = 10;
 int dataLogInterval_ms = 100;
-int dataLogRate_hz;
-float loopTimeGlobal;
 
 
 //LoadCell
@@ -30,7 +28,6 @@ float globalLoadMovingAve; //Just for reading
 float calibrationValueFromConfig; //Calibration Value stored in the config file on the SD card
 bool loadCellIsCalibrated = false;
 int cellCalibrationState = 0;
-float low, high; // temporary noise measuring
 HX711_ADC LoadCell(HX711_dout, HX711_sck);
 
 
@@ -48,8 +45,7 @@ bool allowBuzzer = true;
 float loopTime, aveLoopTime, timeOfLastLoop;
 
 //Time
-unsigned long cellTime, sdTime, statusIndTime, statusIndTimeLocked, dataSafeEndTime, systemOnTime_s = 0;
-float testTime_s, countdownEndTime_ms, dataSafeLength_s;
+unsigned long cellTime, sdTime, statusIndTime, statusIndTimeLocked, dataSafeEndTime, loopTimeGlobal, testTime_s, countdownEndTime_ms, dataSafeLength_s, systemOnTime_s = 0;
 int countdownLength_s = 30;
 
 void setup() {
@@ -85,8 +81,6 @@ void loop() {
 
     GetLoadCellData();
     ManageStandby();
-
-    CalculateCellNoise();
   }
   else if (systemState == 1) { //Countdown 
     TimeKeeper();
@@ -273,14 +267,6 @@ void GetLoadCellData() { //Gets data from loadcell
   }
 }
 
-void CalculateCellNoise() {
-  if (currentCellData > high) {
-    high = currentCellData;
-  } else if (currentCellData < low) {
-    low = currentCellData;
-  }
-}
-
 //==SD==
 
 void InitializeSD() { //Initializes the SD card reader
@@ -404,9 +390,9 @@ void SaveLoadCellCalibrationValueToConfig(float calValue) {
 
 void WriteDataToSD() {
 
-  //DataFile is opened in initializeSD and closed in ManageBurn.
+  //DataFile is opened in initializeSD() and closed in ManageBurn().
 
-  dataLogRate_hz = 1000 / dataLogInterval_ms;
+  unsigned long dataLogRate_hz = 1000 / dataLogInterval_ms;
 
   CalcLoopTime();
 
