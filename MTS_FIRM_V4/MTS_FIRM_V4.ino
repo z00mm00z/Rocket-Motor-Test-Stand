@@ -63,6 +63,8 @@ void setup() {
   InitializeCell();
   ProcessConfig();
 
+  digitalWrite(stateIndicatorLED_GRN, HIGH);
+
   Serial.println("\n > Ready to calibrate, begin with 'c'. Load calibration value from config with 'l'");
   while (!loadCellIsCalibrated) CalibrateCell();
 
