@@ -5,7 +5,7 @@
 /*
 This program is licenced under the Creative Commons Zero V1.0 Universal Licence
 
-- Settings Are Changed In The Config File And Are Automatticaly Applied
+- Settings Are Changed In The Config File And Are Automatically Applied
 */
 
 //SD
