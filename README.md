@@ -12,4 +12,4 @@ Ignition and data recording is automated from the beginning of the countdown to 
 
 The system also waits for a period of time after burnout to make sure that it has not incorrectly detected burnout and that we don't lose any data as a result.
 ## Loadcell Calibration: 
-When you start up the system, you will be prompted to calibrate the Loadcell. The process produces a calibration value that is automatically saved to the config file and can be loaded instead of repeating the calibration process. Keep in mind that the loadcell is tared when loading the calibration value from the config file. (tare - getting the zero offset)
+When you start up the system, you will be prompted to calibrate the Loadcell. The process produces a calibration value that is automatically saved to the config file and can be loaded instead of repeating the calibration process. Keep in mind that the loadcell is tared when loading the calibration value from the config file and the loadcell is very sensitive to temperature.  (tare - getting the zero offset)
