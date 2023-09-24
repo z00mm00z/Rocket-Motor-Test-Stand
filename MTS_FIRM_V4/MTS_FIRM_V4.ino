@@ -45,14 +45,13 @@ bool allowBuzzer = true;
 float loopTime, aveLoopTime, timeOfLastLoop;
 
 //Time
-unsigned long cellTime, sdTime, statusIndTime, statusIndTimeLocked, dataSafeEndTime, loopTimeGlobal, testTime_s, countdownEndTime_ms, dataSafeLength_s, systemOnTime_s = 0;
+unsigned long cellTime, sdTime, statusIndTime, statusIndTimeLocked, dataSafeEndTime, loopTimeGlobal, systemOnTime_s = 0;
 int countdownLength_s = 30;
+float testTime_s, countdownEndTime_ms, dataSafeLength_s;
 
 void setup() {
 
   InitializePins();
-
-  testTime_s = -countdownLength_s;
 
   Serial.begin(115200);
   Serial.println("Starting...");  
@@ -62,6 +61,8 @@ void setup() {
   InitializeSD();
   InitializeCell();
   ProcessConfig();
+
+  testTime_s = -countdownLength_s;
 
   digitalWrite(stateIndicatorLED_GRN, HIGH);
 
@@ -114,7 +115,7 @@ void loop() {
   } 
   else if (systemState == 4) { // Make sure we haven't stopped recording data by accident
     TimeKeeper();
-    IndicateBurn();
+    IndicateCountdown();
 
     GetLoadCellData();
     ManageEndBurnDataSafe();
@@ -123,6 +124,7 @@ void loop() {
   }
   else if (systemState == 5) { // Motor is burnt
     TimeKeeper();
+    ManageEndBurnStandby();
 
     IndicateEndBurnStandby();
   }
@@ -172,9 +174,7 @@ void  InitializeCell() {
 
   LoadCell.refreshDataSet(); //refresh the dataset to be sure that the known mass is measured correct | THIS TAKES TIME, DELAYS PROGRAM
 
-  if (allowBuzzer) { tone(indicatorBuzzer, 1500); }
-  delay(50);
-  noTone(indicatorBuzzer);
+  if (allowBuzzer) { tone(indicatorBuzzer, 1500, 50); }
   Serial.println("done.");
 }
 
@@ -301,10 +301,11 @@ void InitializeSD() { //Initializes the SD card reader
     Serial.print("DATA FOUND ON CARD...");    
   }
 
-  //dataFile.close();
-  if (allowBuzzer) { tone(indicatorBuzzer, 1500); }
-  delay(50);
-  noTone(indicatorBuzzer);
+  dataFile.close();
+  dataFile = SD.open("data.csv", FILE_WRITE);
+
+  if (allowBuzzer) { tone(indicatorBuzzer, 1500, 50); }
+
   Serial.println("done.");
 }
 
@@ -583,9 +584,9 @@ void IndicateCountdown() {
     noTone(indicatorBuzzer); 
   }
   if (statusIndTimeLocked == 0 || statusIndTimeLocked == 300) {
-    digitalWrite(stateIndicatorLED_RED, HIGH);
+    digitalWrite(stateIndicatorLED_BLU, HIGH);
   } else {
-    digitalWrite(stateIndicatorLED_RED, LOW);
+    digitalWrite(stateIndicatorLED_BLU, LOW);
   }
 }
 
@@ -606,11 +607,7 @@ void IndicateIgnition() {
   } else { 
     noTone(indicatorBuzzer); 
   }
-  if (statusIndTimeLocked == 0 || statusIndTimeLocked == 300) {
-    digitalWrite(stateIndicatorLED_BLU, HIGH);
-  } else {
-    digitalWrite(stateIndicatorLED_BLU, LOW);
-  }
+  digitalWrite(stateIndicatorLED_BLU, HIGH);
 }
 
 void IndicateBurn() {
