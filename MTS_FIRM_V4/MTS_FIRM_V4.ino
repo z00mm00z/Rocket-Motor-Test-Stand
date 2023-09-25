@@ -61,6 +61,7 @@ void setup() {
   InitializeSD();
   InitializeCell();
   ProcessConfig();
+  PrintSettings();
 
   testTime_s = -countdownLength_s;
 
@@ -131,6 +132,7 @@ void loop() {
   else if(systemState == 42) { // Abort
     TimeKeeper();
     IndicateAbort();
+    if (dataFile) EndDataWrite();
   }
 }
 
@@ -150,6 +152,17 @@ void InitializePins() {
   pinMode(stateIndicatorLED_RED, OUTPUT);
   pinMode(stateIndicatorLED_BLU, OUTPUT);
   pinMode(ignitionPyroPin, OUTPUT);
+}
+
+void PrintSettings() {
+  Serial.println();
+  Serial.print("Countdown Length: ");
+  Serial.print(countdownLength_s);
+  Serial.println("s");
+  Serial.print("Buzzer On: ");
+  Serial.println(allowBuzzer ? "true" : "false");
+  Serial.print("Data Safe Length: ");
+  Serial.println(dataSafeLength_s);
 }
 
 //==LOADCELL==
@@ -178,7 +191,7 @@ void  InitializeCell() {
   Serial.println("done.");
 }
 
-void CalibrateCell() { //----Calibrate load cell
+void CalibrateCell() { //Calibrate load cell
   float known_mass;
 
   // Waits to start calibration
