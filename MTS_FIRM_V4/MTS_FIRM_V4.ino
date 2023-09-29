@@ -46,11 +46,11 @@ float loopTime, aveLoopTime, timeOfLastLoop;
 
 //Time
 unsigned long cellTime, sdTime, statusIndTime, statusIndTimeLocked, dataSafeEndTime, loopTimeGlobal, systemOnTime_s = 0;
-int countdownLength_s = 30;
+float countdownLength_s = 30;
 float testTime_s, countdownEndTime_ms, dataSafeLength_s;
 
 void setup() {
-
+  
   InitializePins();
 
   Serial.begin(115200);
@@ -152,6 +152,8 @@ void InitializePins() {
   pinMode(stateIndicatorLED_RED, OUTPUT);
   pinMode(stateIndicatorLED_BLU, OUTPUT);
   pinMode(ignitionPyroPin, OUTPUT);
+
+  digitalWrite(ignitionPyroPin, LOW);
 }
 
 void PrintSettings() {
