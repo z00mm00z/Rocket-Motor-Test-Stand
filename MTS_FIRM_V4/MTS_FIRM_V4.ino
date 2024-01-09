@@ -167,6 +167,14 @@ void PrintSettings() {
   Serial.println(dataSafeLength_s);
 }
 
+int availableMemory() {
+  int size = 6144;
+  byte *buf;
+  while ((buf = (byte *) malloc(--size)) == NULL);
+  free(buf);
+  return size;
+}
+
 //==LOADCELL==
 
 void  InitializeCell() {
@@ -306,7 +314,7 @@ void InitializeSD() { //Initializes the SD card reader
   dataFile = SD.open("data.csv", FILE_READ);
   String fileString = dataFile.readString();
 
-  String headerString = "System_State, System_On_Time_s, Test_Time_s, Load_Cell_Data_g, Load_Cell_Data_Ave_g, Calibration_State, Data_Log_Interval_ms, Data_Log_Rate_Hz, Loop_Run_Time_micros";
+  String headerString = "System_State, System_On_Time_s, Test_Time_s, Load_Cell_Data_g, Load_Cell_Data_Ave_g, Calibration_State, Data_Log_Interval_ms, Data_Log_Rate_Hz, Loop_Run_Time_micros, Available_Memory_b";
 
 	if (fileString[0] != 'S') { // Checks whether headers have been declared already or not
     dataFile.close();
@@ -415,7 +423,7 @@ void WriteDataToSD() {
   CalcLoopTime();
 
   if (millis() > sdTime + dataLogInterval_ms && dataFile && logData) {
-    dataFile.println(String(systemState) + ", " + String(systemOnTime_s) + ", " + String(testTime_s) + ", "+ String(currentCellData) + ", " + String(globalLoadMovingAve) + ", " + String(cellCalibrationState) + ", " + String(dataLogInterval_ms) + ", " + String(dataLogRate_hz) + ", " + String(loopTimeGlobal)); 
+    dataFile.println(String(systemState) + ", " + String(systemOnTime_s) + ", " + String(testTime_s) + ", "+ String(currentCellData) + ", " + String(globalLoadMovingAve) + ", " + String(cellCalibrationState) + ", " + String(dataLogInterval_ms) + ", " + String(dataLogRate_hz) + ", " + String(loopTimeGlobal) + ", " + String(availableMemory())); 
     sdTime = millis(); 
   }
 
@@ -427,7 +435,7 @@ void EndDataWrite() {
   logData = false;
 }
 
-//==SYSTEM==
+//==SYSTEM==  
 
 void AdvanceState() {
   systemState++;
