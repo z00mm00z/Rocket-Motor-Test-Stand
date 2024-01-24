@@ -3,7 +3,8 @@ I built this as a pilot project to get some experience before I attempt to build
 serve as a resource for people looking to build a motor test stand similar to this, as I found that this topic wasn't covered much anywhere in detail.
 
 ## Here is data from two different motors I static fired:
-![C6-5](https://github.com/z00mm00z/Rocket-Motor-Test-Stand/Images/C6-5_Static_Fire_Data_Img.png)
+![C6-5](Images/C6-5_Static_Fire_Data_Img.png)
+![E6](Images/E6_Static_Fire_Data_Img.png)
 
 # How it works:
 The system does 3 main things: 
