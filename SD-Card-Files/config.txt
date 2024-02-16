@@ -19,6 +19,9 @@ Slow (Rate During Countdown)
 Buzzer On/Off (1/0):
 *BS: 1;
 
+Test Number:
+*TN: 0;
+
 
 
 
