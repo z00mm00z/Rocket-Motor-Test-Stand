@@ -1,6 +1,7 @@
 #include <HX711_ADC.h>
 #include <SPI.h>
 #include <SD.h>
+#include <Arduino.h>
 
 /*
 This program is licenced under the Creative Commons Zero V1.0 Universal Licence
@@ -11,12 +12,13 @@ This program is licenced under the Creative Commons Zero V1.0 Universal Licence
 //SD
 File dataFile;
 File configFile;
-string dataFileName;
+String dataFileName;
 const int sdChipSelect = 8;
 bool logData = true; // Should always be true unless system is being tested
 int dataLogIntervalSlow_ms = 100; //Constants for data log period.
 int dataLogIntervalFast_ms = 10;
 int dataLogInterval_ms = 100;
+int testNumber = 0;
 
 
 //LoadCell
@@ -299,6 +301,7 @@ void InitializeSD() { //Initializes the SD card reader
 
   ResetIndicators();
 
+  // We need to know if we aren't logging data!
   if (!logData) Serial.println("\n DATA LOGGING DISABLED \n");
 
   dataLogInterval_ms = dataLogIntervalSlow_ms;
@@ -313,26 +316,32 @@ void InitializeSD() { //Initializes the SD card reader
     while (1);
   }
 
-  // Get the data 
+  // Updates the Test Number value in the config file
+    UpdateTestNumberInConfig();
 
+  // Info about files and test
+    Serial.println("Test Number: " + String(testNumber));
 
+  // Prep data file with headers
 
+  dataFileName = "Data_Test" + String(testNumber) + ".csv";
 
-  dataFile = SD.open("data.csv", FILE_READ);
+  dataFile = SD.open(dataFileName, FILE_READ);
   String fileString = dataFile.readString();
 
   String headerString = "System_State, System_On_Time_s, Test_Time_s, Load_Cell_Data_g, Load_Cell_Data_Ave_g, Calibration_State, Data_Log_Interval_ms, Data_Log_Rate_Hz, Loop_Run_Time_micros, Available_Memory_b";
 
-	if (fileString[0] != 'S') { // Checks whether headers have been declared already or not
-    dataFile.close();
-    dataFile = SD.open("data.csv", FILE_WRITE);
-    dataFile.println(headerString);
-  } else if (fileString[0] = 'S') {
-    Serial.print("DATA FOUND ON CARD...");    
-  }
+  dataFile = SD.open(dataFileName, FILE_WRITE);
+
+  dataFile.println(headerString);
 
   dataFile.close();
-  dataFile = SD.open("data.csv", FILE_WRITE);
+
+  // We reopen the datafile to save processing time. The datafile is opened and closed once. This means while 
+  // we will save processing time, we will lose all recorded data if the system crashes (usually due to a voltage drop).
+  // This could be solved by utilising non-volatile memory like a flash chip, but this system does not use any.
+  // If the chance of a crash is high, then open and close the datafile each time you write. (We should not be operating if this is the case.)
+  dataFile = SD.open(dataFileName, FILE_WRITE); 
 
   if (allowBuzzer) { tone(indicatorBuzzer, 1500, 50); }
 
@@ -397,6 +406,8 @@ void ProcessVariableLine(String line) { //Extracts variable values from line
     allowBuzzer = varValStr.toInt();
   } else if (varName == "DSL") {
     dataSafeLength_s = varValStr.toFloat();
+  } else if (varName == "TN") {
+    testNumber = varValStr.toInt();
   } else {
     Serial.println();
     Serial.println("! The '" + varName + "' variable saved in config was not accounted for in code. !");
@@ -404,7 +415,8 @@ void ProcessVariableLine(String line) { //Extracts variable values from line
   }
 }
 
-void SaveLoadCellCalibrationValueToConfig(float calValue) {
+void SaveLoadCellCalibrationValueToConfig(float calValue) { // Saves calibration value to config
+
   configFile = SD.open("config.txt", FILE_READ);
   String fileContent = configFile.readString();
 
@@ -421,6 +433,27 @@ void SaveLoadCellCalibrationValueToConfig(float calValue) {
   Serial.println(" > Calibration Value Saved to Config.");
 }
 
+void UpdateTestNumberInConfig() { // Increments the TestNumber value by one in the config file - used for data file naming
+
+  // This function ensures we have a cronological and unique way of naming datafiles as to not contaminate or erase existing data
+  // It will also prevent having to access and store the data on the SD card between burns 
+
+  configFile = SD.open("config.txt", FILE_READ);
+  String fileContent = configFile.readString();
+
+  testNumber += 1;
+
+  fileContent.replace('TN ' + String(testNumber), 'TN ' + String(testNumber));
+
+  configFile.close();
+
+  configFile = SD.open("config.txt", FILE_WRITE | O_TRUNC);
+
+  configFile.println(fileContent);
+
+  configFile.close();
+}
+
 void WriteDataToSD() {
 
   //DataFile is opened in initializeSD() and closed in ManageBurn().
@@ -429,6 +462,7 @@ void WriteDataToSD() {
 
   CalcLoopTime();
 
+  // Check comments at end if InitializeSD for why we don't close datafile here
   if (millis() > sdTime + dataLogInterval_ms && dataFile && logData) {
     dataFile.println(String(systemState) + ", " + String(systemOnTime_s) + ", " + String(testTime_s) + ", "+ String(currentCellData) + ", " + String(globalLoadMovingAve) + ", " + String(cellCalibrationState) + ", " + String(dataLogInterval_ms) + ", " + String(dataLogRate_hz) + ", " + String(loopTimeGlobal) + ", " + String(availableMemory())); 
     sdTime = millis(); 
@@ -437,12 +471,13 @@ void WriteDataToSD() {
   if (!dataFile && logData) Serial.println("Error writing to file.");
 }
 
-void EndDataWrite() {
+void EndDataWrite() { 
   dataFile.close();
   logData = false;
 }
 
 //==SYSTEM==  
+// There is probably a better way to do these "manage functions" but it works so we chillin
 
 void AdvanceState() {
   systemState++;
@@ -504,7 +539,8 @@ void FireIgnitionPyro() {
   digitalWrite(ignitionPyroPin, HIGH);
 }
 
-float MovingLoadAve(float value) {
+float MovingLoadAve(float value) { // Not my own function, in here just because it can be 0.0
+
   const int nvalues = 50; // Moving average sample size
 
   static int current = 0; // Moving average window size
@@ -537,7 +573,7 @@ void CalcLoopTime() { // Calculates Time of one clock cycle
 
 //==TIME==
 
-void TimeKeeper() {
+void TimeKeeper() { // Tracks the system time
 
   systemOnTime_s = millis() / 1000.00;
 
