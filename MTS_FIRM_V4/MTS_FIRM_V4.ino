@@ -11,6 +11,7 @@ This program is licenced under the Creative Commons Zero V1.0 Universal Licence
 //SD
 File dataFile;
 File configFile;
+string dataFileName;
 const int sdChipSelect = 8;
 bool logData = true; // Should always be true unless system is being tested
 int dataLogIntervalSlow_ms = 100; //Constants for data log period.
@@ -302,6 +303,7 @@ void InitializeSD() { //Initializes the SD card reader
 
   dataLogInterval_ms = dataLogIntervalSlow_ms;
 
+  // Find out whether the SD card module works and exists
   Serial.print("Initializing SD card...");
   delay(100);
   if (!SD.begin(sdChipSelect)) {
@@ -310,6 +312,11 @@ void InitializeSD() { //Initializes the SD card reader
     if (allowBuzzer) { tone(indicatorBuzzer, 100, 200); }
     while (1);
   }
+
+  // Get the data 
+
+
+
 
   dataFile = SD.open("data.csv", FILE_READ);
   String fileString = dataFile.readString();
