@@ -52,6 +52,39 @@ unsigned long cellTime, sdTime, statusIndTime, statusIndTimeLocked, dataSafeEndT
 float countdownLength_s = 30;
 float testTime_s, countdownEndTime_ms, dataSafeLength_s;
 
+void WatchCommands();
+void TimeKeeper();
+void IndicateStandby();
+void GetLoadCellData();
+void ManageStandby();
+void TimeKeeper();
+void IndicateCountdown();
+void ManageCountdown();
+void WriteDataToSD();
+void IndicateIgnition();
+void InitializePins();
+void IndicateStartup();
+void InitializeCell();
+void InitializeSD();
+void ProcessConfig();
+void PrintSettings();
+void CalibrateCell();
+void ResetIndicators();
+void ManageIgnition();
+void FireIgnitionPyro();
+void IndicateBurn();
+void ManageBurn();
+void ManageEndBurnStandby();
+void ManageEndBurnDataSafe();
+void IndicateEndBurnStandby();
+void IndicateAbort();
+void EndDataWrite();
+void SaveLoadCellCalibrationValueToConfig(float calValue);
+void UpdateTestNumberInConfig();
+void ProcessVariableLine(String line);
+void CalcLoopTime();
+float MovingLoadAve(float value);
+
 void setup() {
   
   InitializePins();
@@ -64,6 +97,7 @@ void setup() {
   InitializeSD();
   InitializeCell();
   ProcessConfig();
+  UpdateTestNumberInConfig();  // Updates the Test Number value in the config file
   PrintSettings();
 
   testTime_s = -countdownLength_s;
@@ -132,7 +166,7 @@ void loop() {
 
     IndicateEndBurnStandby();
   }
-  else if(systemState == 42) { // Abort
+  else if(systemState == 42) { // Abort - doesn't really have a purpose, just here for fun
     TimeKeeper();
     IndicateAbort();
     if (dataFile) EndDataWrite();
@@ -168,6 +202,7 @@ void PrintSettings() {
   Serial.println(allowBuzzer ? "true" : "false");
   Serial.print("Data Safe Length: ");
   Serial.println(dataSafeLength_s);
+  Serial.println("Test Number: " + String(testNumber));
 }
 
 int availableMemory() {
@@ -316,18 +351,10 @@ void InitializeSD() { //Initializes the SD card reader
     while (1);
   }
 
-  // Updates the Test Number value in the config file
-    UpdateTestNumberInConfig();
-
-  // Info about files and test
-    Serial.println("Test Number: " + String(testNumber));
-
   // Prep data file with headers
 
-  dataFileName = "Data_Test" + String(testNumber) + ".csv";
-
-  dataFile = SD.open(dataFileName, FILE_READ);
-  String fileString = dataFile.readString();
+  dataFileName = "Data_Test" + String(testNumber + 1) + ".csv"; // We do + 1 Because we haven't updated TestNumber yet
+  dataFileName = "data.csv";
 
   String headerString = "System_State, System_On_Time_s, Test_Time_s, Load_Cell_Data_g, Load_Cell_Data_Ave_g, Calibration_State, Data_Log_Interval_ms, Data_Log_Rate_Hz, Loop_Run_Time_micros, Available_Memory_b";
 
@@ -336,6 +363,8 @@ void InitializeSD() { //Initializes the SD card reader
   dataFile.println(headerString);
 
   dataFile.close();
+
+  Serial.println(dataFile);
 
   // We reopen the datafile to save processing time. The datafile is opened and closed once. This means while 
   // we will save processing time, we will lose all recorded data if the system crashes (usually due to a voltage drop).
@@ -441,9 +470,11 @@ void UpdateTestNumberInConfig() { // Increments the TestNumber value by one in t
   configFile = SD.open("config.txt", FILE_READ);
   String fileContent = configFile.readString();
 
-  testNumber += 1;
+  Serial.println(testNumber); // TESTING
 
-  fileContent.replace('TN ' + String(testNumber), 'TN ' + String(testNumber));
+  fileContent.replace('TN ' + String(testNumber), 'TN ' + String(testNumber + 1));
+
+  testNumber += 1;
 
   configFile.close();
 
@@ -452,11 +483,13 @@ void UpdateTestNumberInConfig() { // Increments the TestNumber value by one in t
   configFile.println(fileContent);
 
   configFile.close();
+
+  Serial.println(dataFileName); // TESTING
 }
 
 void WriteDataToSD() {
 
-  //DataFile is opened in initializeSD() and closed in ManageBurn().
+  // DataFile is opened in initializeSD() and closed in ManageBurn().
 
   unsigned long dataLogRate_hz = 1000 / dataLogInterval_ms;
 
