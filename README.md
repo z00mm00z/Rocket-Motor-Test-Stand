@@ -1,6 +1,5 @@
 # Introduction: 
-I built this as a pilot project to get some experience before I attempt to build a hopefully more complex rocket in the future and it tought me quite a bit about building a full system like this. This repo should
-serve as a resource for people looking to build a motor test stand similar to this, as I found that this topic wasn't covered much online in detail.
+I built this as a pilot project to get some experience before I attempt to build a more complex project of this type in the future. This repo should serve as a resource for people looking to build a motor test stand similar to this, as I found that this topic wasn't covered much online in detail.
 
 # How it works:
 The system does 3 main things: 
@@ -24,4 +23,5 @@ When you start up the system, you will be prompted to calibrate the Loadcell. Th
 - HX711_ADC Library
 
 ## Some Additional Notes
-- I should not have used a 9V battery for this project. They cannot push the amount of amps needed to ignite a motor. 😅
+- Using a 9V battery is not at all optimal for powering igniters. Use a proper battery.
+- Having electronics solely in control of a countdown for a static fire or launch is not safe. It wasn't too much of an issue at this scale but you should be able to abort at any time and that is not an option with this system. 
