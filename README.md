@@ -1,5 +1,5 @@
 # Introduction: 
-I built this as a pilot project to get some experience before I attempt to build a more complex project of this type in the future. This repo should serve as a resource for people looking to build a motor test stand similar to this, as I found that this topic wasn't covered much online in detail.
+I built this project to get some experience actually completing a project for once. This repo should serve as a resource for people looking to build a motor test stand similar to this, as I found that this topic wasn't covered much online in detail.
 
 # How it works:
 The system does 3 main things: 
@@ -7,7 +7,7 @@ The system does 3 main things:
 - Manages the countdown and ignition of the motor, as well as the calibration of the loadcell. 
 - Produces noises and light appropriate for the current situation.
   
-Ignition and data recording is automated from the beginning of the countdown to the end of the burn. Data is logged in a CSV file and I've written a very simple "protocol" to read from a config file (where most settings can be adjusted), the format of which is borrowed from Joe Barnard (Thanks Joe). 
+Ignition and data recording is automated from the beginning of the countdown to the end of the burn. Data is logged in a CSV file and I've written a very simple "protocol" to read from a config file (where most settings can be adjusted), the format of which is borrowed from Joe Barnard.
 
 The system also waits for a period of time after burnout to make sure that it has not incorrectly detected burnout and that we don't lose any data as a result.
 
