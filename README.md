@@ -11,7 +11,7 @@ Ignition and data recording is automated from the beginning of the countdown to 
 
 The system also waits for a period of time after burnout to make sure that it has not incorrectly detected burnout and that we don't lose any data as a result.
 
-## Here is example data from two different motors:
+## Example Data From Two Motor Firings:
 ![C6-5](README_Images/C6-5_Static_Fire_Data_Img.png)
 ![E6](README_Images/E6_Static_Fire_Data_Img.png)
 
